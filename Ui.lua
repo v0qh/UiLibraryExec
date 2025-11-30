@@ -70,7 +70,7 @@ end
 local NotificationHolder = nil
 
 local function CreateNotificationHolder(screenGui)
-    if NotificationHolder then return NotificationHolder end
+    if NotificationHolder and NotificationHolder.Parent then return NotificationHolder end
     
     NotificationHolder = Instance.new("Frame")
     NotificationHolder.Name = "NotificationHolder"
@@ -127,10 +127,6 @@ local function Notify(screenGui, title, message, duration, notifType)
     AccentBar.BorderSizePixel = 0
     AccentBar.Parent = Notification
     
-    local AccentCorner = Instance.new("UICorner")
-    AccentCorner.CornerRadius = UDim.new(0, 8)
-    AccentCorner.Parent = AccentBar
-    
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Size = UDim2.new(1, -20, 0, 20)
     TitleLabel.Position = UDim2.new(0, 15, 0, 10)
@@ -154,14 +150,14 @@ local function Notify(screenGui, title, message, duration, notifType)
     MessageLabel.TextWrapped = true
     MessageLabel.Parent = Notification
     
-    -- Animate in
     Tween(Notification, {Size = UDim2.new(1, 0, 0, 70)}, 0.3)
     
-    -- Animate out after duration
     task.delay(duration, function()
         Tween(Notification, {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1}, 0.3)
         task.wait(0.3)
-        Notification:Destroy()
+        if Notification and Notification.Parent then
+            Notification:Destroy()
+        end
     end)
 end
 
@@ -199,35 +195,28 @@ function Library:CreateWindow(config)
     Stroke.Transparency = 0.3
     Stroke.Parent = MainFrame
     
-    -- Top Bar (only top corners rounded)
+    -- Top Bar
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 50)
     TopBar.BackgroundColor3 = Theme.Secondary
     TopBar.BackgroundTransparency = 0.5
     TopBar.BorderSizePixel = 0
+    TopBar.ClipsDescendants = true
     TopBar.Parent = MainFrame
     
-    -- Top corners container
-    local TopBarTop = Instance.new("Frame")
-    TopBarTop.Size = UDim2.new(1, 0, 0, 25)
-    TopBarTop.BackgroundColor3 = Theme.Secondary
-    TopBarTop.BackgroundTransparency = 0.5
-    TopBarTop.BorderSizePixel = 0
-    TopBarTop.Parent = TopBar
+    local TopBarCorner = Instance.new("UICorner")
+    TopBarCorner.CornerRadius = UDim.new(0, 12)
+    TopBarCorner.Parent = TopBar
     
-    local TopCorner = Instance.new("UICorner")
-    TopCorner.CornerRadius = UDim.new(0, 12)
-    TopCorner.Parent = TopBarTop
-    
-    -- Bottom part (square)
-    local TopBarBottom = Instance.new("Frame")
-    TopBarBottom.Size = UDim2.new(1, 0, 0, 30)
-    TopBarBottom.Position = UDim2.new(0, 0, 0, 20)
-    TopBarBottom.BackgroundColor3 = Theme.Secondary
-    TopBarBottom.BackgroundTransparency = 0.5
-    TopBarBottom.BorderSizePixel = 0
-    TopBarBottom.Parent = TopBar
+    -- Cover bottom corners of TopBar
+    local TopBarCover = Instance.new("Frame")
+    TopBarCover.Size = UDim2.new(1, 0, 0, 15)
+    TopBarCover.Position = UDim2.new(0, 0, 1, -15)
+    TopBarCover.BackgroundColor3 = Theme.Secondary
+    TopBarCover.BackgroundTransparency = 0.5
+    TopBarCover.BorderSizePixel = 0
+    TopBarCover.Parent = TopBar
     
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
@@ -459,7 +448,7 @@ function Library:CreateWindow(config)
                 callback()
             end)
             
-            local element = {Update = function(self) end}
+            local element = {Update = function() end}
             table.insert(Tab.Elements, element)
             return Button
         end
@@ -557,7 +546,7 @@ function Library:CreateWindow(config)
                     UpdateToggle()
                     callback(toggled)
                 end,
-                Update = function(self) end
+                Update = function() end
             }
             table.insert(Tab.Elements, element)
             return element
@@ -669,8 +658,9 @@ function Library:CreateWindow(config)
                 end
             end)
             
-            SliderButton.MouseButton1Click:Connect(function(input)
-                UpdateSlider(input)
+            SliderButton.MouseButton1Click:Connect(function()
+                local mouse = UserInputService:GetMouseLocation()
+                UpdateSlider({Position = Vector2.new(mouse.X, mouse.Y)})
             end)
             
             local initialPos = (default - min) / (max - min)
@@ -692,13 +682,13 @@ function Library:CreateWindow(config)
                     Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)})
                     callback(value)
                 end,
-                Update = function(self) end
+                Update = function() end
             }
             table.insert(Tab.Elements, element)
             return element
         end
         
-        -- Dropdown Element (Fixed arrow positioning)
+        -- Dropdown Element
         function Tab:AddDropdown(config)
             config = config or {}
             local dropdownText = config.Name or "Dropdown"
@@ -744,17 +734,9 @@ function Library:CreateWindow(config)
             DropdownButton.ZIndex = 3
             DropdownButton.Parent = DropdownFrame
             
-            -- Value and arrow container (right side)
-            local RightContainer = Instance.new("Frame")
-            RightContainer.Size = UDim2.new(0.5, -15, 1, 0)
-            RightContainer.Position = UDim2.new(0.5, 0, 0, 0)
-            RightContainer.BackgroundTransparency = 1
-            RightContainer.ZIndex = 3
-            RightContainer.Parent = DropdownFrame
-            
             local DropdownValue = Instance.new("TextLabel")
-            DropdownValue.Size = UDim2.new(1, -25, 1, 0)
-            DropdownValue.Position = UDim2.new(0, 0, 0, 0)
+            DropdownValue.Size = UDim2.new(0.5, -40, 1, 0)
+            DropdownValue.Position = UDim2.new(0.5, 0, 0, 0)
             DropdownValue.BackgroundTransparency = 1
             DropdownValue.Text = default
             DropdownValue.TextColor3 = Theme.Accent
@@ -762,18 +744,18 @@ function Library:CreateWindow(config)
             DropdownValue.Font = Enum.Font.GothamBold
             DropdownValue.TextXAlignment = Enum.TextXAlignment.Right
             DropdownValue.ZIndex = 3
-            DropdownValue.Parent = RightContainer
+            DropdownValue.Parent = DropdownFrame
             
             local DropdownArrow = Instance.new("TextLabel")
             DropdownArrow.Size = UDim2.new(0, 20, 1, 0)
-            DropdownArrow.Position = UDim2.new(1, -20, 0, 0)
+            DropdownArrow.Position = UDim2.new(1, -25, 0, 0)
             DropdownArrow.BackgroundTransparency = 1
             DropdownArrow.Text = "▼"
             DropdownArrow.TextColor3 = Theme.TextSecondary
             DropdownArrow.TextSize = 10
             DropdownArrow.Font = Enum.Font.Gotham
             DropdownArrow.ZIndex = 3
-            DropdownArrow.Parent = RightContainer
+            DropdownArrow.Parent = DropdownFrame
             
             local OptionsFrame = Instance.new("Frame")
             OptionsFrame.Size = UDim2.new(1, 0, 0, 0)
@@ -896,26 +878,24 @@ function Library:CreateWindow(config)
                     DropdownValue.Text = val
                     callback(val)
                 end,
-                
                 Refresh = function(self, newOptions)
                     for _, child in pairs(OptionsFrame:GetChildren()) do
                         if child:IsA("TextButton") then
                             child:Destroy()
                         end
                     end
-                    
                     options = newOptions
                     for _, option in ipairs(options) do
                         CreateOption(option)
                     end
                 end,
-                Update = function(self) end
+                Update = function() end
             }
             table.insert(Tab.Elements, element)
             return element
         end
         
-        -- Color Picker (Fixed)
+        -- Color Picker (Fixed - no spam, proper saturation)
         function Tab:AddColorPicker(config)
             config = config or {}
             local colorText = config.Name or "Color"
@@ -950,7 +930,6 @@ function Library:CreateWindow(config)
             ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
             ColorLabel.Parent = ColorFrame
             
-            -- Preview color box
             local PreviewColor = Instance.new("Frame")
             PreviewColor.Size = UDim2.new(0, 60, 0, 30)
             PreviewColor.Position = UDim2.new(1, -75, 0, 8)
@@ -968,7 +947,6 @@ function Library:CreateWindow(config)
             PreviewStroke.Transparency = 0.5
             PreviewStroke.Parent = PreviewColor
             
-            -- Hue label
             local HueLabel = Instance.new("TextLabel")
             HueLabel.Size = UDim2.new(0, 30, 0, 12)
             HueLabel.Position = UDim2.new(0, 15, 0, 38)
@@ -980,7 +958,6 @@ function Library:CreateWindow(config)
             HueLabel.TextXAlignment = Enum.TextXAlignment.Left
             HueLabel.Parent = ColorFrame
             
-            -- Hue Slider
             local HueSliderBg = Instance.new("Frame")
             HueSliderBg.Size = UDim2.new(1, -30, 0, 12)
             HueSliderBg.Position = UDim2.new(0, 15, 0, 52)
@@ -995,11 +972,11 @@ function Library:CreateWindow(config)
             local HueGradient = Instance.new("UIGradient")
             HueGradient.Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-                ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 255, 0)),
-                ColorSequenceKeypoint.new(0.32, Color3.fromRGB(0, 255, 0)),
-                ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-                ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),
-                ColorSequenceKeypoint.new(0.82, Color3.fromRGB(255, 0, 255)),
+                ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
                 ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
             })
             HueGradient.Parent = HueSliderBg
@@ -1027,7 +1004,6 @@ function Library:CreateWindow(config)
             HueButton.Text = ""
             HueButton.Parent = HueSliderBg
             
-            -- Saturation label
             local SatLabel = Instance.new("TextLabel")
             SatLabel.Size = UDim2.new(0, 60, 0, 12)
             SatLabel.Position = UDim2.new(0, 15, 0, 68)
@@ -1039,11 +1015,10 @@ function Library:CreateWindow(config)
             SatLabel.TextXAlignment = Enum.TextXAlignment.Left
             SatLabel.Parent = ColorFrame
             
-            -- Saturation Slider
             local SatSliderBg = Instance.new("Frame")
             SatSliderBg.Size = UDim2.new(1, -30, 0, 12)
             SatSliderBg.Position = UDim2.new(0, 15, 0, 82)
-            SatSliderBg.BackgroundColor3 = default
+            SatSliderBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             SatSliderBg.BorderSizePixel = 0
             SatSliderBg.Parent = ColorFrame
             
@@ -1100,21 +1075,32 @@ function Library:CreateWindow(config)
                 return Color3.fromRGB((r + m) * 255, (g + m) * 255, (b + m) * 255)
             end
             
-            local function UpdateColor()
+            local function UpdateColor(fireCallback)
                 local pureHue = HSVtoRGB(currentHue, 1, 1)
                 local finalColor = HSVtoRGB(currentHue, currentSat, 1)
                 
                 PreviewColor.BackgroundColor3 = finalColor
                 SatGradient.Color = ColorSequence.new(Color3.fromRGB(180, 180, 180), pureHue)
                 
-                callback(finalColor)
+                if fireCallback then
+                    callback(finalColor)
+                end
             end
             
-            HueButton.MouseButton1Down:Connect(function() hueDragging = true end)
-            SatButton.MouseButton1Down:Connect(function() satDragging = true end)
+            HueButton.MouseButton1Down:Connect(function()
+                hueDragging = true
+            end)
+            
+            SatButton.MouseButton1Down:Connect(function()
+                satDragging = true
+            end)
             
             UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    if hueDragging or satDragging then
+                        local finalColor = HSVtoRGB(currentHue, currentSat, 1)
+                        callback(finalColor)
+                    end
                     hueDragging = false
                     satDragging = false
                 end
@@ -1126,12 +1112,12 @@ function Library:CreateWindow(config)
                         local huePos = math.clamp((input.Position.X - HueSliderBg.AbsolutePosition.X) / HueSliderBg.AbsoluteSize.X, 0, 1)
                         currentHue = huePos
                         HueHandle.Position = UDim2.new(huePos, -8, 0.5, -8)
-                        UpdateColor()
+                        UpdateColor(false)
                     elseif satDragging then
                         local satPos = math.clamp((input.Position.X - SatSliderBg.AbsolutePosition.X) / SatSliderBg.AbsoluteSize.X, 0, 1)
                         currentSat = satPos
                         SatHandle.Position = UDim2.new(satPos, -8, 0.5, -8)
-                        UpdateColor()
+                        UpdateColor(false)
                     end
                 end
             end)
@@ -1149,7 +1135,7 @@ function Library:CreateWindow(config)
                     PreviewColor.BackgroundColor3 = col
                     callback(col)
                 end,
-                Update = function(self) end
+                Update = function() end
             }
             table.insert(Tab.Elements, element)
             return element
@@ -1236,7 +1222,7 @@ function Library:CreateWindow(config)
                 GetValue = function(self)
                     return Textbox.Text
                 end,
-                Update = function(self) end
+                Update = function() end
             }
             table.insert(Tab.Elements, element)
             return element
