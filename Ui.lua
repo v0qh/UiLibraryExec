@@ -1,5 +1,5 @@
 --[[
-    Modern Minimalistic UI Library - Enhanced Edition
+    Modern Minimalistic UI Library - Fixed Edition
     Clean black transparent design with customizable accent color
     Full tweens, smooth animations, and color picker included
 ]]
@@ -66,6 +66,105 @@ local function MakeDraggable(frame, dragHandle)
     end)
 end
 
+-- Notification System
+local NotificationHolder = nil
+
+local function CreateNotificationHolder(screenGui)
+    if NotificationHolder then return NotificationHolder end
+    
+    NotificationHolder = Instance.new("Frame")
+    NotificationHolder.Name = "NotificationHolder"
+    NotificationHolder.Size = UDim2.new(0, 300, 1, -20)
+    NotificationHolder.Position = UDim2.new(1, -310, 0, 10)
+    NotificationHolder.BackgroundTransparency = 1
+    NotificationHolder.Parent = screenGui
+    
+    local Layout = Instance.new("UIListLayout")
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Padding = UDim.new(0, 8)
+    Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+    Layout.Parent = NotificationHolder
+    
+    return NotificationHolder
+end
+
+local function Notify(screenGui, title, message, duration, notifType)
+    duration = duration or 3
+    notifType = notifType or "info"
+    
+    local holder = CreateNotificationHolder(screenGui)
+    
+    local colors = {
+        info = Color3.fromRGB(100, 150, 255),
+        success = Color3.fromRGB(80, 200, 120),
+        warning = Color3.fromRGB(255, 180, 60),
+        error = Color3.fromRGB(255, 80, 80)
+    }
+    
+    local accentColor = colors[notifType] or colors.info
+    
+    local Notification = Instance.new("Frame")
+    Notification.Size = UDim2.new(1, 0, 0, 0)
+    Notification.BackgroundColor3 = Theme.Primary
+    Notification.BackgroundTransparency = 0.1
+    Notification.BorderSizePixel = 0
+    Notification.ClipsDescendants = true
+    Notification.Parent = holder
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = Notification
+    
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = accentColor
+    Stroke.Thickness = 1
+    Stroke.Transparency = 0.5
+    Stroke.Parent = Notification
+    
+    local AccentBar = Instance.new("Frame")
+    AccentBar.Size = UDim2.new(0, 3, 1, 0)
+    AccentBar.BackgroundColor3 = accentColor
+    AccentBar.BorderSizePixel = 0
+    AccentBar.Parent = Notification
+    
+    local AccentCorner = Instance.new("UICorner")
+    AccentCorner.CornerRadius = UDim.new(0, 8)
+    AccentCorner.Parent = AccentBar
+    
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, -20, 0, 20)
+    TitleLabel.Position = UDim2.new(0, 15, 0, 10)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title
+    TitleLabel.TextColor3 = Theme.Text
+    TitleLabel.TextSize = 13
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = Notification
+    
+    local MessageLabel = Instance.new("TextLabel")
+    MessageLabel.Size = UDim2.new(1, -20, 0, 30)
+    MessageLabel.Position = UDim2.new(0, 15, 0, 28)
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Text = message
+    MessageLabel.TextColor3 = Theme.TextSecondary
+    MessageLabel.TextSize = 12
+    MessageLabel.Font = Enum.Font.Gotham
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MessageLabel.TextWrapped = true
+    MessageLabel.Parent = Notification
+    
+    -- Animate in
+    Tween(Notification, {Size = UDim2.new(1, 0, 0, 70)}, 0.3)
+    
+    -- Animate out after duration
+    task.delay(duration, function()
+        Tween(Notification, {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1}, 0.3)
+        task.wait(0.3)
+        Notification:Destroy()
+    end)
+end
+
 -- Main Library Functions
 function Library:CreateWindow(config)
     config = config or {}
@@ -73,17 +172,14 @@ function Library:CreateWindow(config)
     local windowSize = config.Size or UDim2.new(0, 520, 0, 600)
     local accentColor = config.AccentColor or Theme.Accent
     
-    -- Update theme with custom accent
     Theme.Accent = accentColor
     
-    -- Create ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "ModernUILibrary_" .. tostring(math.random(1000, 9999))
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = CoreGui
     
-    -- Main Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = windowSize
@@ -97,14 +193,13 @@ function Library:CreateWindow(config)
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
     
-    -- Stroke Border
     local Stroke = Instance.new("UIStroke")
     Stroke.Color = Theme.Border
     Stroke.Thickness = 1
     Stroke.Transparency = 0.3
     Stroke.Parent = MainFrame
     
-    -- Top Bar
+    -- Top Bar (only top corners rounded)
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 50)
@@ -113,18 +208,27 @@ function Library:CreateWindow(config)
     TopBar.BorderSizePixel = 0
     TopBar.Parent = MainFrame
     
-    local TopBarCorner = Instance.new("UICorner")
-    TopBarCorner.CornerRadius = UDim.new(0, 12)
-    TopBarCorner.Parent = TopBar
+    -- Top corners container
+    local TopBarTop = Instance.new("Frame")
+    TopBarTop.Size = UDim2.new(1, 0, 0, 25)
+    TopBarTop.BackgroundColor3 = Theme.Secondary
+    TopBarTop.BackgroundTransparency = 0.5
+    TopBarTop.BorderSizePixel = 0
+    TopBarTop.Parent = TopBar
     
-    -- Top Bar Stroke
-    local TopBarStroke = Instance.new("UIStroke")
-    TopBarStroke.Color = Theme.Border
-    TopBarStroke.Thickness = 1
-    TopBarStroke.Transparency = 0.3
-    TopBarStroke.Parent = TopBar
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.CornerRadius = UDim.new(0, 12)
+    TopCorner.Parent = TopBarTop
     
-    -- Title
+    -- Bottom part (square)
+    local TopBarBottom = Instance.new("Frame")
+    TopBarBottom.Size = UDim2.new(1, 0, 0, 30)
+    TopBarBottom.Position = UDim2.new(0, 0, 0, 20)
+    TopBarBottom.BackgroundColor3 = Theme.Secondary
+    TopBarBottom.BackgroundTransparency = 0.5
+    TopBarBottom.BorderSizePixel = 0
+    TopBarBottom.Parent = TopBar
+    
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
     Title.Size = UDim2.new(1, -80, 1, 0)
@@ -135,9 +239,9 @@ function Library:CreateWindow(config)
     Title.TextSize = 16
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.ZIndex = 2
     Title.Parent = TopBar
     
-    -- Close Button
     local CloseButton = Instance.new("TextButton")
     CloseButton.Name = "CloseButton"
     CloseButton.Size = UDim2.new(0, 32, 0, 32)
@@ -149,6 +253,7 @@ function Library:CreateWindow(config)
     CloseButton.TextSize = 22
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.BorderSizePixel = 0
+    CloseButton.ZIndex = 2
     CloseButton.Parent = TopBar
     
     local CloseCorner = Instance.new("UICorner")
@@ -165,25 +270,19 @@ function Library:CreateWindow(config)
     
     CloseButton.MouseButton1Click:Connect(function()
         Tween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-        wait(0.3)
+        task.wait(0.3)
         ScreenGui:Destroy()
     end)
     
     -- Tab Container
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(0, 130, 1, -60)
+    TabContainer.Size = UDim2.new(0, 130, 1, -50)
     TabContainer.Position = UDim2.new(0, 0, 0, 50)
     TabContainer.BackgroundColor3 = Theme.Secondary
     TabContainer.BackgroundTransparency = 0.7
     TabContainer.BorderSizePixel = 0
     TabContainer.Parent = MainFrame
-    
-    local TabStroke = Instance.new("UIStroke")
-    TabStroke.Color = Theme.Border
-    TabStroke.Thickness = 1
-    TabStroke.Transparency = 0.3
-    TabStroke.Parent = TabContainer
     
     local TabLayout = Instance.new("UIListLayout")
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -207,7 +306,6 @@ function Library:CreateWindow(config)
     ContentContainer.ClipsDescendants = true
     ContentContainer.Parent = MainFrame
     
-    -- Make draggable
     MakeDraggable(MainFrame, TopBar)
     
     local Window = {}
@@ -219,9 +317,12 @@ function Library:CreateWindow(config)
     Window.CurrentTab = nil
     Window.Theme = Theme
     
+    function Window:Notify(title, message, duration, notifType)
+        Notify(ScreenGui, title, message, duration, notifType)
+    end
+    
     function Window:SetAccentColor(color)
         Theme.Accent = color
-        -- Update all elements with accent color
         for _, tab in pairs(self.Tabs) do
             for _, element in pairs(tab.Elements) do
                 if element.Update then
@@ -236,7 +337,6 @@ function Library:CreateWindow(config)
         Tab.Name = tabName
         Tab.Elements = {}
         
-        -- Tab Button
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
         TabButton.Size = UDim2.new(1, 0, 0, 40)
@@ -253,7 +353,6 @@ function Library:CreateWindow(config)
         TabCorner.CornerRadius = UDim.new(0, 8)
         TabCorner.Parent = TabButton
         
-        -- Tab Content
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName .. "_Content"
         TabContent.Size = UDim2.new(1, 0, 1, 0)
@@ -284,7 +383,6 @@ function Library:CreateWindow(config)
         Tab.Button = TabButton
         Tab.Content = TabContent
         
-        -- Tab switching
         TabButton.MouseButton1Click:Connect(function()
             for _, tab in pairs(Window.Tabs) do
                 tab.Content.Visible = false
@@ -314,7 +412,7 @@ function Library:CreateWindow(config)
             end
         end)
         
-        -- Tab Elements
+        -- Button Element
         function Tab:AddButton(config)
             config = config or {}
             local buttonText = config.Name or "Button"
@@ -356,7 +454,7 @@ function Library:CreateWindow(config)
             
             Button.MouseButton1Click:Connect(function()
                 Tween(ButtonFrame, {BackgroundTransparency = 0.3}, 0.1)
-                wait(0.1)
+                task.wait(0.1)
                 Tween(ButtonFrame, {BackgroundTransparency = 0.5}, 0.1)
                 callback()
             end)
@@ -366,6 +464,7 @@ function Library:CreateWindow(config)
             return Button
         end
         
+        -- Toggle Element
         function Tab:AddToggle(config)
             config = config or {}
             local toggleText = config.Name or "Toggle"
@@ -464,6 +563,7 @@ function Library:CreateWindow(config)
             return element
         end
         
+        -- Slider Element
         function Tab:AddSlider(config)
             config = config or {}
             local sliderText = config.Name or "Slider"
@@ -598,6 +698,7 @@ function Library:CreateWindow(config)
             return element
         end
         
+        -- Dropdown Element (Fixed arrow positioning)
         function Tab:AddDropdown(config)
             config = config or {}
             local dropdownText = config.Name or "Dropdown"
@@ -625,7 +726,7 @@ function Library:CreateWindow(config)
             DropdownCorner.Parent = DropdownFrame
             
             local DropdownLabel = Instance.new("TextLabel")
-            DropdownLabel.Size = UDim2.new(1, -80, 1, 0)
+            DropdownLabel.Size = UDim2.new(0.5, -10, 1, 0)
             DropdownLabel.Position = UDim2.new(0, 15, 0, 0)
             DropdownLabel.BackgroundTransparency = 1
             DropdownLabel.Text = dropdownText
@@ -643,20 +744,17 @@ function Library:CreateWindow(config)
             DropdownButton.ZIndex = 3
             DropdownButton.Parent = DropdownFrame
             
-            local DropdownArrow = Instance.new("TextLabel")
-            DropdownArrow.Size = UDim2.new(0, 20, 0, 20)
-            DropdownArrow.Position = UDim2.new(1, -30, 0.5, -10)
-            DropdownArrow.BackgroundTransparency = 1
-            DropdownArrow.Text = "▼"
-            DropdownArrow.TextColor3 = Theme.TextSecondary
-            DropdownArrow.TextSize = 10
-            DropdownArrow.Font = Enum.Font.Gotham
-            DropdownArrow.ZIndex = 3
-            DropdownArrow.Parent = DropdownFrame
+            -- Value and arrow container (right side)
+            local RightContainer = Instance.new("Frame")
+            RightContainer.Size = UDim2.new(0.5, -15, 1, 0)
+            RightContainer.Position = UDim2.new(0.5, 0, 0, 0)
+            RightContainer.BackgroundTransparency = 1
+            RightContainer.ZIndex = 3
+            RightContainer.Parent = DropdownFrame
             
             local DropdownValue = Instance.new("TextLabel")
-            DropdownValue.Size = UDim2.new(0, 100, 1, 0)
-            DropdownValue.Position = UDim2.new(1, -120, 0, 0)
+            DropdownValue.Size = UDim2.new(1, -25, 1, 0)
+            DropdownValue.Position = UDim2.new(0, 0, 0, 0)
             DropdownValue.BackgroundTransparency = 1
             DropdownValue.Text = default
             DropdownValue.TextColor3 = Theme.Accent
@@ -664,13 +762,24 @@ function Library:CreateWindow(config)
             DropdownValue.Font = Enum.Font.GothamBold
             DropdownValue.TextXAlignment = Enum.TextXAlignment.Right
             DropdownValue.ZIndex = 3
-            DropdownValue.Parent = DropdownFrame
+            DropdownValue.Parent = RightContainer
+            
+            local DropdownArrow = Instance.new("TextLabel")
+            DropdownArrow.Size = UDim2.new(0, 20, 1, 0)
+            DropdownArrow.Position = UDim2.new(1, -20, 0, 0)
+            DropdownArrow.BackgroundTransparency = 1
+            DropdownArrow.Text = "▼"
+            DropdownArrow.TextColor3 = Theme.TextSecondary
+            DropdownArrow.TextSize = 10
+            DropdownArrow.Font = Enum.Font.Gotham
+            DropdownArrow.ZIndex = 3
+            DropdownArrow.Parent = RightContainer
             
             local OptionsFrame = Instance.new("Frame")
             OptionsFrame.Size = UDim2.new(1, 0, 0, 0)
             OptionsFrame.Position = UDim2.new(0, 0, 1, 4)
             OptionsFrame.BackgroundColor3 = Theme.Secondary
-            OptionsFrame.BackgroundTransparency = 0.3
+            OptionsFrame.BackgroundTransparency = 0.1
             OptionsFrame.BorderSizePixel = 0
             OptionsFrame.ClipsDescendants = true
             OptionsFrame.Visible = false
@@ -746,7 +855,7 @@ function Library:CreateWindow(config)
                     isOpen = false
                     Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.2)
                     Tween(DropdownArrow, {Rotation = 0}, 0.2)
-                    wait(0.2)
+                    task.wait(0.2)
                     OptionsFrame.Visible = false
                     
                     callback(optionText)
@@ -762,13 +871,13 @@ function Library:CreateWindow(config)
                 
                 if isOpen then
                     OptionsFrame.Visible = true
-                    local targetHeight = #options * 38 + (#options - 1) * 4 + 12
+                    local targetHeight = #options * 36 + (#options - 1) * 4 + 12
                     Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, targetHeight)}, 0.2)
                     Tween(DropdownArrow, {Rotation = 180}, 0.2)
                 else
                     Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.2)
                     Tween(DropdownArrow, {Rotation = 0}, 0.2)
-                    wait(0.2)
+                    task.wait(0.2)
                     OptionsFrame.Visible = false
                 end
             end)
@@ -806,6 +915,7 @@ function Library:CreateWindow(config)
             return element
         end
         
+        -- Color Picker (Fixed)
         function Tab:AddColorPicker(config)
             config = config or {}
             local colorText = config.Name or "Color"
@@ -813,7 +923,7 @@ function Library:CreateWindow(config)
             local callback = config.Callback or function() end
             
             local ColorFrame = Instance.new("Frame")
-            ColorFrame.Size = UDim2.new(1, 0, 0, 100)
+            ColorFrame.Size = UDim2.new(1, 0, 0, 110)
             ColorFrame.BackgroundColor3 = Theme.Tertiary
             ColorFrame.BackgroundTransparency = 0.7
             ColorFrame.BorderSizePixel = 0
@@ -831,7 +941,7 @@ function Library:CreateWindow(config)
             
             local ColorLabel = Instance.new("TextLabel")
             ColorLabel.Size = UDim2.new(1, -90, 0, 20)
-            ColorLabel.Position = UDim2.new(0, 15, 0, 8)
+            ColorLabel.Position = UDim2.new(0, 15, 0, 10)
             ColorLabel.BackgroundTransparency = 1
             ColorLabel.Text = colorText
             ColorLabel.TextColor3 = Theme.Text
@@ -840,10 +950,41 @@ function Library:CreateWindow(config)
             ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
             ColorLabel.Parent = ColorFrame
             
+            -- Preview color box
+            local PreviewColor = Instance.new("Frame")
+            PreviewColor.Size = UDim2.new(0, 60, 0, 30)
+            PreviewColor.Position = UDim2.new(1, -75, 0, 8)
+            PreviewColor.BackgroundColor3 = default
+            PreviewColor.BorderSizePixel = 0
+            PreviewColor.Parent = ColorFrame
+            
+            local PreviewCorner = Instance.new("UICorner")
+            PreviewCorner.CornerRadius = UDim.new(0, 6)
+            PreviewCorner.Parent = PreviewColor
+            
+            local PreviewStroke = Instance.new("UIStroke")
+            PreviewStroke.Color = Theme.Border
+            PreviewStroke.Thickness = 1
+            PreviewStroke.Transparency = 0.5
+            PreviewStroke.Parent = PreviewColor
+            
+            -- Hue label
+            local HueLabel = Instance.new("TextLabel")
+            HueLabel.Size = UDim2.new(0, 30, 0, 12)
+            HueLabel.Position = UDim2.new(0, 15, 0, 38)
+            HueLabel.BackgroundTransparency = 1
+            HueLabel.Text = "Hue"
+            HueLabel.TextColor3 = Theme.TextSecondary
+            HueLabel.TextSize = 10
+            HueLabel.Font = Enum.Font.Gotham
+            HueLabel.TextXAlignment = Enum.TextXAlignment.Left
+            HueLabel.Parent = ColorFrame
+            
+            -- Hue Slider
             local HueSliderBg = Instance.new("Frame")
-            HueSliderBg.Size = UDim2.new(1, -30, 0, 8)
-            HueSliderBg.Position = UDim2.new(0, 15, 0, 32)
-            HueSliderBg.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            HueSliderBg.Size = UDim2.new(1, -30, 0, 12)
+            HueSliderBg.Position = UDim2.new(0, 15, 0, 52)
+            HueSliderBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             HueSliderBg.BorderSizePixel = 0
             HueSliderBg.Parent = ColorFrame
             
@@ -863,68 +1004,110 @@ function Library:CreateWindow(config)
             })
             HueGradient.Parent = HueSliderBg
             
+            local HueHandle = Instance.new("Frame")
+            HueHandle.Size = UDim2.new(0, 16, 0, 16)
+            HueHandle.Position = UDim2.new(0, -8, 0.5, -8)
+            HueHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            HueHandle.BorderSizePixel = 0
+            HueHandle.ZIndex = 5
+            HueHandle.Parent = HueSliderBg
+            
+            local HueHandleCorner = Instance.new("UICorner")
+            HueHandleCorner.CornerRadius = UDim.new(1, 0)
+            HueHandleCorner.Parent = HueHandle
+            
+            local HueHandleStroke = Instance.new("UIStroke")
+            HueHandleStroke.Color = Color3.fromRGB(60, 60, 60)
+            HueHandleStroke.Thickness = 2
+            HueHandleStroke.Parent = HueHandle
+            
             local HueButton = Instance.new("TextButton")
             HueButton.Size = UDim2.new(1, 0, 1, 0)
             HueButton.BackgroundTransparency = 1
             HueButton.Text = ""
             HueButton.Parent = HueSliderBg
             
-            local SaturationSliderBg = Instance.new("Frame")
-            SaturationSliderBg.Size = UDim2.new(1, -30, 0, 8)
-            SaturationSliderBg.Position = UDim2.new(0, 15, 0, 45)
-            SaturationSliderBg.BackgroundColor3 = default
-            SaturationSliderBg.BorderSizePixel = 0
-            SaturationSliderBg.Parent = ColorFrame
+            -- Saturation label
+            local SatLabel = Instance.new("TextLabel")
+            SatLabel.Size = UDim2.new(0, 60, 0, 12)
+            SatLabel.Position = UDim2.new(0, 15, 0, 68)
+            SatLabel.BackgroundTransparency = 1
+            SatLabel.Text = "Saturation"
+            SatLabel.TextColor3 = Theme.TextSecondary
+            SatLabel.TextSize = 10
+            SatLabel.Font = Enum.Font.Gotham
+            SatLabel.TextXAlignment = Enum.TextXAlignment.Left
+            SatLabel.Parent = ColorFrame
+            
+            -- Saturation Slider
+            local SatSliderBg = Instance.new("Frame")
+            SatSliderBg.Size = UDim2.new(1, -30, 0, 12)
+            SatSliderBg.Position = UDim2.new(0, 15, 0, 82)
+            SatSliderBg.BackgroundColor3 = default
+            SatSliderBg.BorderSizePixel = 0
+            SatSliderBg.Parent = ColorFrame
             
             local SatCorner = Instance.new("UICorner")
             SatCorner.CornerRadius = UDim.new(1, 0)
-            SatCorner.Parent = SaturationSliderBg
+            SatCorner.Parent = SatSliderBg
             
             local SatGradient = Instance.new("UIGradient")
-            SatGradient.Color = ColorSequence.new(Color3.fromRGB(200, 200, 200), default)
-            SatGradient.Parent = SaturationSliderBg
+            SatGradient.Color = ColorSequence.new(Color3.fromRGB(180, 180, 180), default)
+            SatGradient.Parent = SatSliderBg
+            
+            local SatHandle = Instance.new("Frame")
+            SatHandle.Size = UDim2.new(0, 16, 0, 16)
+            SatHandle.Position = UDim2.new(1, -8, 0.5, -8)
+            SatHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SatHandle.BorderSizePixel = 0
+            SatHandle.ZIndex = 5
+            SatHandle.Parent = SatSliderBg
+            
+            local SatHandleCorner = Instance.new("UICorner")
+            SatHandleCorner.CornerRadius = UDim.new(1, 0)
+            SatHandleCorner.Parent = SatHandle
+            
+            local SatHandleStroke = Instance.new("UIStroke")
+            SatHandleStroke.Color = Color3.fromRGB(60, 60, 60)
+            SatHandleStroke.Thickness = 2
+            SatHandleStroke.Parent = SatHandle
             
             local SatButton = Instance.new("TextButton")
             SatButton.Size = UDim2.new(1, 0, 1, 0)
             SatButton.BackgroundTransparency = 1
             SatButton.Text = ""
-            SatButton.Parent = SaturationSliderBg
+            SatButton.Parent = SatSliderBg
             
-            local PreviewColor = Instance.new("Frame")
-            PreviewColor.Size = UDim2.new(0, 70, 0, 35)
-            PreviewColor.Position = UDim2.new(1, -80, 0.5, -18)
-            PreviewColor.BackgroundColor3 = default
-            PreviewColor.BorderSizePixel = 0
-            PreviewColor.Parent = ColorFrame
-            
-            local PreviewCorner = Instance.new("UICorner")
-            PreviewCorner.CornerRadius = UDim.new(0, 6)
-            PreviewCorner.Parent = PreviewColor
-            
-            local PreviewStroke = Instance.new("UIStroke")
-            PreviewStroke.Color = Theme.Border
-            PreviewStroke.Thickness = 1
-            PreviewStroke.Transparency = 0.5
-            PreviewStroke.Parent = PreviewColor
-            
-            local currentColor = default
+            local currentHue = 0.6
+            local currentSat = 1
             local hueDragging = false
             local satDragging = false
             
             local function HSVtoRGB(h, s, v)
                 local c = v * s
-                local x = c * (1 - ((h / 60) % 2 - 1))
+                local hp = h * 6
+                local x = c * (1 - math.abs(hp % 2 - 1))
                 local m = v - c
                 local r, g, b
                 
-                if h < 60 then r, g, b = c, x, 0
-                elseif h < 120 then r, g, b = x, c, 0
-                elseif h < 180 then r, g, b = 0, c, x
-                elseif h < 240 then r, g, b = 0, x, c
-                elseif h < 300 then r, g, b = x, 0, c
+                if hp < 1 then r, g, b = c, x, 0
+                elseif hp < 2 then r, g, b = x, c, 0
+                elseif hp < 3 then r, g, b = 0, c, x
+                elseif hp < 4 then r, g, b = 0, x, c
+                elseif hp < 5 then r, g, b = x, 0, c
                 else r, g, b = c, 0, x end
                 
                 return Color3.fromRGB((r + m) * 255, (g + m) * 255, (b + m) * 255)
+            end
+            
+            local function UpdateColor()
+                local pureHue = HSVtoRGB(currentHue, 1, 1)
+                local finalColor = HSVtoRGB(currentHue, currentSat, 1)
+                
+                PreviewColor.BackgroundColor3 = finalColor
+                SatGradient.Color = ColorSequence.new(Color3.fromRGB(180, 180, 180), pureHue)
+                
+                callback(finalColor)
             end
             
             HueButton.MouseButton1Down:Connect(function() hueDragging = true end)
@@ -941,20 +1124,14 @@ function Library:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseMovement then
                     if hueDragging then
                         local huePos = math.clamp((input.Position.X - HueSliderBg.AbsolutePosition.X) / HueSliderBg.AbsoluteSize.X, 0, 1)
-                        local hue = huePos * 360
-                        currentColor = HSVtoRGB(hue, 1, 1)
-                        Tween(PreviewColor, {BackgroundColor3 = currentColor}, 0.05)
-                        Tween(SaturationSliderBg, {BackgroundColor3 = currentColor}, 0.05)
-                        callback(currentColor)
+                        currentHue = huePos
+                        HueHandle.Position = UDim2.new(huePos, -8, 0.5, -8)
+                        UpdateColor()
                     elseif satDragging then
-                        local satPos = math.clamp((input.Position.X - SaturationSliderBg.AbsolutePosition.X) / SaturationSliderBg.AbsoluteSize.X, 0, 1)
-                        currentColor = Color3.new(
-                            currentColor.R + (1 - satPos) * (200/255 - currentColor.R),
-                            currentColor.G + (1 - satPos) * (200/255 - currentColor.G),
-                            currentColor.B + (1 - satPos) * (200/255 - currentColor.B)
-                        )
-                        Tween(PreviewColor, {BackgroundColor3 = currentColor}, 0.05)
-                        callback(currentColor)
+                        local satPos = math.clamp((input.Position.X - SatSliderBg.AbsolutePosition.X) / SatSliderBg.AbsoluteSize.X, 0, 1)
+                        currentSat = satPos
+                        SatHandle.Position = UDim2.new(satPos, -8, 0.5, -8)
+                        UpdateColor()
                     end
                 end
             end)
@@ -969,8 +1146,7 @@ function Library:CreateWindow(config)
             
             local element = {
                 SetValue = function(self, col)
-                    currentColor = col
-                    Tween(PreviewColor, {BackgroundColor3 = col})
+                    PreviewColor.BackgroundColor3 = col
                     callback(col)
                 end,
                 Update = function(self) end
@@ -979,6 +1155,7 @@ function Library:CreateWindow(config)
             return element
         end
         
+        -- Textbox Element
         function Tab:AddTextbox(config)
             config = config or {}
             local textboxText = config.Name or "Textbox"
@@ -1015,8 +1192,8 @@ function Library:CreateWindow(config)
             TextboxLabel.Parent = TextboxFrame
             
             local Textbox = Instance.new("TextBox")
-            Textbox.Size = UDim2.new(1, -120, 0, 26)
-            Textbox.Position = UDim2.new(0, 110, 0.5, -13)
+            Textbox.Size = UDim2.new(1, -130, 0, 26)
+            Textbox.Position = UDim2.new(0, 115, 0.5, -13)
             Textbox.BackgroundColor3 = Theme.Secondary
             Textbox.BackgroundTransparency = 0.6
             Textbox.BorderSizePixel = 0
@@ -1056,12 +1233,16 @@ function Library:CreateWindow(config)
                 SetValue = function(self, val)
                     Textbox.Text = val
                 end,
+                GetValue = function(self)
+                    return Textbox.Text
+                end,
                 Update = function(self) end
             }
             table.insert(Tab.Elements, element)
             return element
         end
         
+        -- Label Element
         function Tab:AddLabel(text)
             local LabelFrame = Instance.new("Frame")
             LabelFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -1088,6 +1269,7 @@ function Library:CreateWindow(config)
             }
         end
         
+        -- Section Element
         function Tab:AddSection(sectionName)
             local SectionFrame = Instance.new("Frame")
             SectionFrame.Size = UDim2.new(1, 0, 0, 35)
