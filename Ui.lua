@@ -11,6 +11,7 @@ Library.__index = Library
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
 
 -- Default Theme
 local Theme = {
@@ -95,7 +96,7 @@ local function Notify(screenGui, title, message, duration, notifType)
     local holder = CreateNotificationHolder(screenGui)
     
     local colors = {
-        info = Color3.fromRGB(100, 150, 255),
+        info = Theme.Accent,
         success = Color3.fromRGB(80, 200, 120),
         warning = Color3.fromRGB(255, 180, 60),
         error = Color3.fromRGB(255, 80, 80)
@@ -209,7 +210,6 @@ function Library:CreateWindow(config)
     TopBarCorner.CornerRadius = UDim.new(0, 12)
     TopBarCorner.Parent = TopBar
     
-    -- Cover bottom corners of TopBar
     local TopBarCover = Instance.new("Frame")
     TopBarCover.Size = UDim2.new(1, 0, 0, 15)
     TopBarCover.Position = UDim2.new(0, 0, 1, -15)
@@ -273,6 +273,94 @@ function Library:CreateWindow(config)
     TabContainer.BorderSizePixel = 0
     TabContainer.Parent = MainFrame
     
+    -- User Info Panel (bottom left)
+    local player = Players.LocalPlayer
+    
+    local UserInfoFrame = Instance.new("Frame")
+    UserInfoFrame.Name = "UserInfo"
+    UserInfoFrame.Size = UDim2.new(1, 0, 0, 60)
+    UserInfoFrame.Position = UDim2.new(0, 0, 1, -60)
+    UserInfoFrame.BackgroundColor3 = Theme.Tertiary
+    UserInfoFrame.BackgroundTransparency = 0.5
+    UserInfoFrame.BorderSizePixel = 0
+    UserInfoFrame.Parent = TabContainer
+    
+    local UserInfoTopBorder = Instance.new("Frame")
+    UserInfoTopBorder.Size = UDim2.new(1, 0, 0, 1)
+    UserInfoTopBorder.Position = UDim2.new(0, 0, 0, 0)
+    UserInfoTopBorder.BackgroundColor3 = Theme.Border
+    UserInfoTopBorder.BackgroundTransparency = 0.5
+    UserInfoTopBorder.BorderSizePixel = 0
+    UserInfoTopBorder.Parent = UserInfoFrame
+    
+    local AvatarContainer = Instance.new("Frame")
+    AvatarContainer.Size = UDim2.new(0, 40, 0, 40)
+    AvatarContainer.Position = UDim2.new(0, 10, 0.5, -20)
+    AvatarContainer.BackgroundColor3 = Theme.Secondary
+    AvatarContainer.BorderSizePixel = 0
+    AvatarContainer.Parent = UserInfoFrame
+    
+    local AvatarCorner = Instance.new("UICorner")
+    AvatarCorner.CornerRadius = UDim.new(1, 0)
+    AvatarCorner.Parent = AvatarContainer
+    
+    local AvatarStroke = Instance.new("UIStroke")
+    AvatarStroke.Color = Theme.Accent
+    AvatarStroke.Thickness = 2
+    AvatarStroke.Transparency = 0.3
+    AvatarStroke.Parent = AvatarContainer
+    
+    local AvatarImage = Instance.new("ImageLabel")
+    AvatarImage.Size = UDim2.new(1, 0, 1, 0)
+    AvatarImage.BackgroundTransparency = 1
+    AvatarImage.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+    AvatarImage.Parent = AvatarContainer
+    
+    local AvatarImageCorner = Instance.new("UICorner")
+    AvatarImageCorner.CornerRadius = UDim.new(1, 0)
+    AvatarImageCorner.Parent = AvatarImage
+    
+    local DisplayNameLabel = Instance.new("TextLabel")
+    DisplayNameLabel.Size = UDim2.new(1, -60, 0, 18)
+    DisplayNameLabel.Position = UDim2.new(0, 58, 0, 12)
+    DisplayNameLabel.BackgroundTransparency = 1
+    DisplayNameLabel.Text = player.DisplayName
+    DisplayNameLabel.TextColor3 = Theme.Text
+    DisplayNameLabel.TextSize = 13
+    DisplayNameLabel.Font = Enum.Font.GothamBold
+    DisplayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DisplayNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    DisplayNameLabel.Parent = UserInfoFrame
+    
+    local UsernameLabel = Instance.new("TextLabel")
+    UsernameLabel.Size = UDim2.new(1, -60, 0, 14)
+    UsernameLabel.Position = UDim2.new(0, 58, 0, 30)
+    UsernameLabel.BackgroundTransparency = 1
+    UsernameLabel.Text = "@" .. player.Name
+    UsernameLabel.TextColor3 = Theme.TextSecondary
+    UsernameLabel.TextSize = 11
+    UsernameLabel.Font = Enum.Font.Gotham
+    UsernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    UsernameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    UsernameLabel.Parent = UserInfoFrame
+    
+    -- Online indicator
+    local OnlineIndicator = Instance.new("Frame")
+    OnlineIndicator.Size = UDim2.new(0, 10, 0, 10)
+    OnlineIndicator.Position = UDim2.new(1, -4, 1, -4)
+    OnlineIndicator.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
+    OnlineIndicator.BorderSizePixel = 0
+    OnlineIndicator.Parent = AvatarContainer
+    
+    local OnlineCorner = Instance.new("UICorner")
+    OnlineCorner.CornerRadius = UDim.new(1, 0)
+    OnlineCorner.Parent = OnlineIndicator
+    
+    local OnlineStroke = Instance.new("UIStroke")
+    OnlineStroke.Color = Theme.Tertiary
+    OnlineStroke.Thickness = 2
+    OnlineStroke.Parent = OnlineIndicator
+    
     local TabLayout = Instance.new("UIListLayout")
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Padding = UDim.new(0, 8)
@@ -282,7 +370,7 @@ function Library:CreateWindow(config)
     TabPadding.PaddingLeft = UDim.new(0, 8)
     TabPadding.PaddingRight = UDim.new(0, 8)
     TabPadding.PaddingTop = UDim.new(0, 8)
-    TabPadding.PaddingBottom = UDim.new(0, 8)
+    TabPadding.PaddingBottom = UDim.new(0, 70)
     TabPadding.Parent = TabContainer
     
     -- Content Container
@@ -305,6 +393,10 @@ function Library:CreateWindow(config)
     Window.Tabs = {}
     Window.CurrentTab = nil
     Window.Theme = Theme
+    Window.AccentElements = {}
+    
+    -- Register avatar stroke for accent updates
+    table.insert(Window.AccentElements, {instance = AvatarStroke, type = "stroke"})
     
     function Window:Notify(title, message, duration, notifType)
         Notify(ScreenGui, title, message, duration, notifType)
@@ -312,12 +404,23 @@ function Library:CreateWindow(config)
     
     function Window:SetAccentColor(color)
         Theme.Accent = color
-        for _, tab in pairs(self.Tabs) do
-            for _, element in pairs(tab.Elements) do
-                if element.Update then
-                    element:Update()
+        
+        for _, element in pairs(self.AccentElements) do
+            if element.instance and element.instance.Parent then
+                if element.type == "text" then
+                    Tween(element.instance, {TextColor3 = color}, 0.2)
+                elseif element.type == "background" then
+                    Tween(element.instance, {BackgroundColor3 = color}, 0.2)
+                elseif element.type == "scrollbar" then
+                    element.instance.ScrollBarImageColor3 = color
+                elseif element.type == "stroke" then
+                    Tween(element.instance, {Color = color}, 0.2)
                 end
             end
+        end
+        
+        if self.CurrentTab then
+            Tween(self.CurrentTab.Button, {TextColor3 = color}, 0.2)
         end
     end
     
@@ -352,6 +455,8 @@ function Library:CreateWindow(config)
         TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabContent.Visible = false
         TabContent.Parent = ContentContainer
+        
+        table.insert(Window.AccentElements, {instance = TabContent, type = "scrollbar"})
         
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -601,6 +706,8 @@ function Library:CreateWindow(config)
             SliderValue.TextXAlignment = Enum.TextXAlignment.Right
             SliderValue.Parent = SliderFrame
             
+            table.insert(Window.AccentElements, {instance = SliderValue, type = "text"})
+            
             local SliderBackground = Instance.new("Frame")
             SliderBackground.Size = UDim2.new(1, -30, 0, 6)
             SliderBackground.Position = UDim2.new(0, 15, 0.5, 5)
@@ -618,6 +725,8 @@ function Library:CreateWindow(config)
             SliderFill.BackgroundColor3 = Theme.Accent
             SliderFill.BorderSizePixel = 0
             SliderFill.Parent = SliderBackground
+            
+            table.insert(Window.AccentElements, {instance = SliderFill, type = "background"})
             
             local SliderFillCorner = Instance.new("UICorner")
             SliderFillCorner.CornerRadius = UDim.new(1, 0)
@@ -745,6 +854,8 @@ function Library:CreateWindow(config)
             DropdownValue.TextXAlignment = Enum.TextXAlignment.Right
             DropdownValue.ZIndex = 3
             DropdownValue.Parent = DropdownFrame
+            
+            table.insert(Window.AccentElements, {instance = DropdownValue, type = "text"})
             
             local DropdownArrow = Instance.new("TextLabel")
             DropdownArrow.Size = UDim2.new(0, 20, 1, 0)
@@ -895,11 +1006,11 @@ function Library:CreateWindow(config)
             return element
         end
         
-        -- Color Picker (Fixed - no spam, proper saturation)
+        -- Color Picker
         function Tab:AddColorPicker(config)
             config = config or {}
             local colorText = config.Name or "Color"
-            local default = config.Default or Color3.fromRGB(100, 150, 255)
+            local default = config.Default or Theme.Accent
             local callback = config.Callback or function() end
             
             local ColorFrame = Instance.new("Frame")
@@ -1219,7 +1330,7 @@ function Library:CreateWindow(config)
                 SetValue = function(self, val)
                     Textbox.Text = val
                 end,
-                GetValue = function(self)
+                GetValue = function()
                     return Textbox.Text
                 end,
                 Update = function() end
@@ -1273,6 +1384,8 @@ function Library:CreateWindow(config)
             SectionLabel.Font = Enum.Font.GothamBold
             SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
             SectionLabel.Parent = SectionFrame
+            
+            table.insert(Window.AccentElements, {instance = SectionLabel, type = "text"})
             
             local Divider = Instance.new("Frame")
             Divider.Size = UDim2.new(1, -15, 0, 1)
