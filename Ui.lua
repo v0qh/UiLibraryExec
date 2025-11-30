@@ -848,10 +848,25 @@ function Library:CreateWindow(config)
         
         table.insert(Window.Tabs, Tab)
         
-        -- Auto-select first tab
-        if #Window.Tabs == 1 then
-            TabButton.MouseButton1Click:Fire()
-        end
+
+-- Auto-select first tab
+if #Window.Tabs == 1 then
+    task.wait()
+    for _, tab in pairs(Window.Tabs) do
+        tab.Content.Visible = false
+        Tween(tab.Button, {
+            BackgroundTransparency = 0.3,
+            TextColor3 = Color3.fromRGB(200, 200, 200)
+        })
+    end
+    
+    TabContent.Visible = true
+    Window.CurrentTab = Tab
+    Tween(TabButton, {
+        BackgroundTransparency = 0,
+        TextColor3 = Color3.fromRGB(255, 255, 255)
+    })
+end
         
         return Tab
     end
