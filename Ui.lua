@@ -629,4 +629,189 @@ function Library:CreateWindow(config)
                 OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 OptionButton.TextSize = 13
                 OptionButton.Font = Enum.Font.Gotham
-                Option
+                OptionButton.MouseEnter:Connect(function()
+                    Tween(OptionButton, {BackgroundColor3 = Color3.fromRGB(45, 45, 55)})
+                end)
+
+                OptionButton.MouseLeave:Connect(function()
+                    if currentValue == optionText then
+                        Tween(OptionButton, {BackgroundTransparency = 0})
+                        Tween(OptionButton, {BackgroundColor3 = Color3.fromRGB(30, 30, 35)})
+                    else
+                        Tween(OptionButton, {BackgroundTransparency = 0.5})
+                        Tween(OptionButton, {BackgroundColor3 = Color3.fromRGB(30, 30, 35)})
+                    end
+                end)
+
+                OptionButton.MouseButton1Click:Connect(function()
+                    currentValue = optionText
+                    DropdownValue.Text = optionText
+                    callback(optionText)
+
+                    -- update transparencies
+                    for _, opt in ipairs(OptionsFrame:GetChildren()) do
+                        if opt:IsA("TextButton") then
+                            opt.BackgroundTransparency = (opt.Text == currentValue) and 0 or 0.5
+                        end
+                    end
+
+                    -- close dropdown
+                    isOpen = false
+                    Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
+                    OptionsFrame.Visible = false
+                end)
+
+                OptionButton.Parent = OptionsFrame
+            end
+
+            -- create initial options
+            for _, option in ipairs(options) do
+                CreateOption(option)
+            end
+
+            DropdownButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+
+                if isOpen then
+                    OptionsFrame.Visible = true
+                    Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, #options * 32 + 6)}, 0.15)
+                else
+                    Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
+                    wait(0.15)
+                    OptionsFrame.Visible = false
+                end
+            end)
+
+            DropdownFrame.MouseEnter:Connect(function()
+                Tween(DropdownFrame, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+            end)
+
+            DropdownFrame.MouseLeave:Connect(function()
+                if not isOpen then
+                    Tween(DropdownFrame, {BackgroundColor3 = Color3.fromRGB(30, 30, 35)})
+                end
+            end)
+
+            return {
+                SetValue = function(val)
+                    currentValue = val
+                    DropdownValue.Text = val
+                    callback(val)
+                end,
+                Refresh = function(newOptions)
+                    options = newOptions
+                    currentValue = newOptions[1]
+                    DropdownValue.Text = currentValue
+
+                    for _, child in ipairs(OptionsFrame:GetChildren()) do
+                        if child:IsA("TextButton") then child:Destroy() end
+                    end
+
+                    for _, opt in ipairs(newOptions) do
+                        CreateOption(opt)
+                    end
+                end
+            }
+        end
+
+
+        ---------------------------------------------------------
+        -- LABEL
+        ---------------------------------------------------------
+        function Tab:AddLabel(text)
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, -10, 0, 22)
+            Label.BackgroundTransparency = 1
+            Label.Text = text or "Label"
+            Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+            Label.TextSize = 14
+            Label.Font = Enum.Font.Gotham
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = TabContent
+
+            return Label
+        end
+
+
+        ---------------------------------------------------------
+        -- TEXTBOX
+        ---------------------------------------------------------
+        function Tab:AddTextbox(config)
+            config = config or {}
+            local textboxText = config.Name or "Textbox"
+            local placeholder = config.Placeholder or ""
+            local callback = config.Callback or function() end
+
+            local Frame = Instance.new("Frame")
+            Frame.Size = UDim2.new(1, -10, 0, 40)
+            Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+            Frame.BackgroundTransparency = 0.2
+            Frame.BorderSizePixel = 0
+            Frame.Parent = TabContent
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 6)
+            Corner.Parent = Frame
+
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, -20, 0, 18)
+            Label.Position = UDim2.new(0, 12, 0, 4)
+            Label.BackgroundTransparency = 1
+            Label.Text = textboxText
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 14
+            Label.Font = Enum.Font.Gotham
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Frame
+
+            local Box = Instance.new("TextBox")
+            Box.Size = UDim2.new(1, -20, 0, 18)
+            Box.Position = UDim2.new(0, 10, 0, 20)
+            Box.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+            Box.Text = ""
+            Box.PlaceholderText = placeholder
+            Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Box.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+            Box.Font = Enum.Font.Gotham
+            Box.TextSize = 13
+            Box.BorderSizePixel = 0
+            Box.Parent = Frame
+
+            local BoxCorner = Instance.new("UICorner")
+            BoxCorner.CornerRadius = UDim.new(0, 4)
+            BoxCorner.Parent = Box
+
+            Box.FocusLost:Connect(function()
+                callback(Box.Text)
+            end)
+
+            Frame.MouseEnter:Connect(function()
+                Tween(Frame, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)})
+            end)
+
+            Frame.MouseLeave:Connect(function()
+                Tween(Frame, {BackgroundColor3 = Color3.fromRGB(30, 30, 35)})
+            end)
+
+            return Box
+        end
+
+        ---------------------------------------------------------
+        -- END OF TAB CREATION
+        ---------------------------------------------------------
+        
+        table.insert(Window.Tabs, Tab)
+        if not Window.CurrentTab then
+            TabButton:MouseButton1Click()
+        end
+        
+        return Tab
+    end
+    
+    ---------------------------------------------------------
+    -- RETURN WINDOW
+    ---------------------------------------------------------
+    return Window
+end
+
+return Library
