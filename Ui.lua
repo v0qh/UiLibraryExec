@@ -848,16 +848,6 @@ function Library:CreateWindow(config)
         
         table.insert(Window.Tabs, Tab)
         
-        -- Auto-select first tab
-        if #Window.Tabs == 1 then
-            task.wait()
-            TabContent.Visible = true
-            Window.CurrentTab = Tab
-            Tween(TabButton, {
-                BackgroundTransparency = 0,
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            })
-        end
         
         return Tab
     end
