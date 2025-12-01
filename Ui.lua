@@ -168,6 +168,7 @@ function Library:CreateWindow(config)
     local windowName = config.Name or "UI Library"
     local windowSize = config.Size or UDim2.new(0, 520, 0, 600)
     local accentColor = config.AccentColor or Theme.Accent
+    local toggleKey = config.ToggleKey or Enum.KeyCode.RightShift
     
     Theme.Accent = accentColor
     
@@ -190,11 +191,11 @@ function Library:CreateWindow(config)
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
     
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Theme.Border
-    Stroke.Thickness = 1
-    Stroke.Transparency = 0.3
-    Stroke.Parent = MainFrame
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Color = Theme.Border
+    MainStroke.Thickness = 1
+    MainStroke.Transparency = 0.3
+    MainStroke.Parent = MainFrame
     
     -- Top Bar
     local TopBar = Instance.new("Frame")
@@ -220,7 +221,7 @@ function Library:CreateWindow(config)
     
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
-    Title.Size = UDim2.new(1, -80, 1, 0)
+    Title.Size = UDim2.new(1, -120, 1, 0)
     Title.Position = UDim2.new(0, 20, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = windowName
@@ -231,6 +232,26 @@ function Library:CreateWindow(config)
     Title.ZIndex = 2
     Title.Parent = TopBar
     
+    -- Minimize Button
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
+    MinimizeButton.Position = UDim2.new(1, -82, 0.5, -16)
+    MinimizeButton.BackgroundColor3 = Theme.Tertiary
+    MinimizeButton.BackgroundTransparency = 0.5
+    MinimizeButton.Text = "−"
+    MinimizeButton.TextColor3 = Theme.Text
+    MinimizeButton.TextSize = 22
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.BorderSizePixel = 0
+    MinimizeButton.ZIndex = 2
+    MinimizeButton.Parent = TopBar
+    
+    local MinimizeCorner = Instance.new("UICorner")
+    MinimizeCorner.CornerRadius = UDim.new(0, 6)
+    MinimizeCorner.Parent = MinimizeButton
+    
+    -- Close Button
     local CloseButton = Instance.new("TextButton")
     CloseButton.Name = "CloseButton"
     CloseButton.Size = UDim2.new(0, 32, 0, 32)
@@ -249,6 +270,29 @@ function Library:CreateWindow(config)
     CloseCorner.CornerRadius = UDim.new(0, 6)
     CloseCorner.Parent = CloseButton
     
+    -- Minimize logic
+    local isMinimized = false
+    local originalSize = windowSize
+    
+    MinimizeButton.MouseEnter:Connect(function()
+        Tween(MinimizeButton, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.7}, 0.15)
+    end)
+    
+    MinimizeButton.MouseLeave:Connect(function()
+        Tween(MinimizeButton, {BackgroundColor3 = Theme.Tertiary, BackgroundTransparency = 0.5}, 0.15)
+    end)
+    
+    MinimizeButton.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        if isMinimized then
+            Tween(MainFrame, {Size = UDim2.new(0, originalSize.X.Offset, 0, 50)}, 0.3)
+            MinimizeButton.Text = "+"
+        else
+            Tween(MainFrame, {Size = originalSize}, 0.3)
+            MinimizeButton.Text = "−"
+        end
+    end)
+    
     CloseButton.MouseEnter:Connect(function()
         Tween(CloseButton, {BackgroundColor3 = Color3.fromRGB(220, 80, 80), BackgroundTransparency = 0.7}, 0.15)
     end)
@@ -263,6 +307,13 @@ function Library:CreateWindow(config)
         ScreenGui:Destroy()
     end)
     
+    -- Toggle keybind
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == toggleKey then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end)
+    
     -- Tab Container
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
@@ -271,18 +322,20 @@ function Library:CreateWindow(config)
     TabContainer.BackgroundColor3 = Theme.Secondary
     TabContainer.BackgroundTransparency = 0.7
     TabContainer.BorderSizePixel = 0
+    TabContainer.ClipsDescendants = true
     TabContainer.Parent = MainFrame
     
-    -- User Info Panel (bottom left)
+    -- User Info Panel (bottom of tab container)
     local player = Players.LocalPlayer
     
     local UserInfoFrame = Instance.new("Frame")
     UserInfoFrame.Name = "UserInfo"
-    UserInfoFrame.Size = UDim2.new(1, 0, 0, 60)
-    UserInfoFrame.Position = UDim2.new(0, 0, 1, -60)
+    UserInfoFrame.Size = UDim2.new(1, 0, 0, 55)
+    UserInfoFrame.Position = UDim2.new(0, 0, 1, -55)
     UserInfoFrame.BackgroundColor3 = Theme.Tertiary
     UserInfoFrame.BackgroundTransparency = 0.5
     UserInfoFrame.BorderSizePixel = 0
+    UserInfoFrame.ZIndex = 5
     UserInfoFrame.Parent = TabContainer
     
     local UserInfoTopBorder = Instance.new("Frame")
@@ -294,8 +347,8 @@ function Library:CreateWindow(config)
     UserInfoTopBorder.Parent = UserInfoFrame
     
     local AvatarContainer = Instance.new("Frame")
-    AvatarContainer.Size = UDim2.new(0, 40, 0, 40)
-    AvatarContainer.Position = UDim2.new(0, 10, 0.5, -20)
+    AvatarContainer.Size = UDim2.new(0, 36, 0, 36)
+    AvatarContainer.Position = UDim2.new(0, 8, 0.5, -18)
     AvatarContainer.BackgroundColor3 = Theme.Secondary
     AvatarContainer.BorderSizePixel = 0
     AvatarContainer.Parent = UserInfoFrame
@@ -313,43 +366,51 @@ function Library:CreateWindow(config)
     local AvatarImage = Instance.new("ImageLabel")
     AvatarImage.Size = UDim2.new(1, 0, 1, 0)
     AvatarImage.BackgroundTransparency = 1
-    AvatarImage.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
     AvatarImage.Parent = AvatarContainer
+    
+    task.spawn(function()
+        local success, result = pcall(function()
+            return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+        end)
+        if success then
+            AvatarImage.Image = result
+        end
+    end)
     
     local AvatarImageCorner = Instance.new("UICorner")
     AvatarImageCorner.CornerRadius = UDim.new(1, 0)
     AvatarImageCorner.Parent = AvatarImage
     
     local DisplayNameLabel = Instance.new("TextLabel")
-    DisplayNameLabel.Size = UDim2.new(1, -60, 0, 18)
-    DisplayNameLabel.Position = UDim2.new(0, 58, 0, 12)
+    DisplayNameLabel.Size = UDim2.new(1, -54, 0, 16)
+    DisplayNameLabel.Position = UDim2.new(0, 50, 0, 12)
     DisplayNameLabel.BackgroundTransparency = 1
     DisplayNameLabel.Text = player.DisplayName
     DisplayNameLabel.TextColor3 = Theme.Text
-    DisplayNameLabel.TextSize = 13
+    DisplayNameLabel.TextSize = 12
     DisplayNameLabel.Font = Enum.Font.GothamBold
     DisplayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     DisplayNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
     DisplayNameLabel.Parent = UserInfoFrame
     
     local UsernameLabel = Instance.new("TextLabel")
-    UsernameLabel.Size = UDim2.new(1, -60, 0, 14)
-    UsernameLabel.Position = UDim2.new(0, 58, 0, 30)
+    UsernameLabel.Size = UDim2.new(1, -54, 0, 14)
+    UsernameLabel.Position = UDim2.new(0, 50, 0, 28)
     UsernameLabel.BackgroundTransparency = 1
     UsernameLabel.Text = "@" .. player.Name
     UsernameLabel.TextColor3 = Theme.TextSecondary
-    UsernameLabel.TextSize = 11
+    UsernameLabel.TextSize = 10
     UsernameLabel.Font = Enum.Font.Gotham
     UsernameLabel.TextXAlignment = Enum.TextXAlignment.Left
     UsernameLabel.TextTruncate = Enum.TextTruncate.AtEnd
     UsernameLabel.Parent = UserInfoFrame
     
-    -- Online indicator
     local OnlineIndicator = Instance.new("Frame")
     OnlineIndicator.Size = UDim2.new(0, 10, 0, 10)
-    OnlineIndicator.Position = UDim2.new(1, -4, 1, -4)
+    OnlineIndicator.Position = UDim2.new(1, -3, 1, -3)
     OnlineIndicator.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
     OnlineIndicator.BorderSizePixel = 0
+    OnlineIndicator.ZIndex = 6
     OnlineIndicator.Parent = AvatarContainer
     
     local OnlineCorner = Instance.new("UICorner")
@@ -361,17 +422,33 @@ function Library:CreateWindow(config)
     OnlineStroke.Thickness = 2
     OnlineStroke.Parent = OnlineIndicator
     
+    -- Tab buttons container
+    local TabButtonsContainer = Instance.new("ScrollingFrame")
+    TabButtonsContainer.Name = "TabButtons"
+    TabButtonsContainer.Size = UDim2.new(1, 0, 1, -55)
+    TabButtonsContainer.Position = UDim2.new(0, 0, 0, 0)
+    TabButtonsContainer.BackgroundTransparency = 1
+    TabButtonsContainer.BorderSizePixel = 0
+    TabButtonsContainer.ScrollBarThickness = 2
+    TabButtonsContainer.ScrollBarImageColor3 = Theme.Accent
+    TabButtonsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabButtonsContainer.Parent = TabContainer
+    
     local TabLayout = Instance.new("UIListLayout")
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Padding = UDim.new(0, 8)
-    TabLayout.Parent = TabContainer
+    TabLayout.Parent = TabButtonsContainer
     
     local TabPadding = Instance.new("UIPadding")
     TabPadding.PaddingLeft = UDim.new(0, 8)
     TabPadding.PaddingRight = UDim.new(0, 8)
     TabPadding.PaddingTop = UDim.new(0, 8)
-    TabPadding.PaddingBottom = UDim.new(0, 70)
-    TabPadding.Parent = TabContainer
+    TabPadding.PaddingBottom = UDim.new(0, 8)
+    TabPadding.Parent = TabButtonsContainer
+    
+    TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabButtonsContainer.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 16)
+    end)
     
     -- Content Container
     local ContentContainer = Instance.new("Frame")
@@ -388,15 +465,16 @@ function Library:CreateWindow(config)
     local Window = {}
     Window.ScreenGui = ScreenGui
     Window.MainFrame = MainFrame
-    Window.TabContainer = TabContainer
+    Window.TabContainer = TabButtonsContainer
     Window.ContentContainer = ContentContainer
     Window.Tabs = {}
     Window.CurrentTab = nil
     Window.Theme = Theme
     Window.AccentElements = {}
+    Window.ToggleKey = toggleKey
     
-    -- Register avatar stroke for accent updates
     table.insert(Window.AccentElements, {instance = AvatarStroke, type = "stroke"})
+    table.insert(Window.AccentElements, {instance = TabButtonsContainer, type = "scrollbar"})
     
     function Window:Notify(title, message, duration, notifType)
         Notify(ScreenGui, title, message, duration, notifType)
@@ -424,6 +502,19 @@ function Library:CreateWindow(config)
         end
     end
     
+    function Window:SetToggleKey(key)
+        self.ToggleKey = key
+        toggleKey = key
+    end
+    
+    function Window:Toggle()
+        MainFrame.Visible = not MainFrame.Visible
+    end
+    
+    function Window:Destroy()
+        ScreenGui:Destroy()
+    end
+    
     function Window:CreateTab(tabName)
         local Tab = {}
         Tab.Name = tabName
@@ -439,7 +530,7 @@ function Library:CreateWindow(config)
         TabButton.TextSize = 13
         TabButton.Font = Enum.Font.Gotham
         TabButton.BorderSizePixel = 0
-        TabButton.Parent = TabContainer
+        TabButton.Parent = TabButtonsContainer
         
         local TabCorner = Instance.new("UICorner")
         TabCorner.CornerRadius = UDim.new(0, 8)
@@ -480,18 +571,12 @@ function Library:CreateWindow(config)
         TabButton.MouseButton1Click:Connect(function()
             for _, tab in pairs(Window.Tabs) do
                 tab.Content.Visible = false
-                Tween(tab.Button, {
-                    BackgroundTransparency = 0.8,
-                    TextColor3 = Theme.TextSecondary
-                }, 0.2)
+                Tween(tab.Button, {BackgroundTransparency = 0.8, TextColor3 = Theme.TextSecondary}, 0.2)
             end
             
             TabContent.Visible = true
             Window.CurrentTab = Tab
-            Tween(TabButton, {
-                BackgroundTransparency = 0,
-                TextColor3 = Theme.Accent
-            }, 0.2)
+            Tween(TabButton, {BackgroundTransparency = 0, TextColor3 = Theme.Accent}, 0.2)
         end)
         
         TabButton.MouseEnter:Connect(function()
@@ -506,7 +591,7 @@ function Library:CreateWindow(config)
             end
         end)
         
-        -- Button Element
+        -- Button
         function Tab:AddButton(config)
             config = config or {}
             local buttonText = config.Name or "Button"
@@ -553,12 +638,10 @@ function Library:CreateWindow(config)
                 callback()
             end)
             
-            local element = {Update = function() end}
-            table.insert(Tab.Elements, element)
             return Button
         end
         
-        -- Toggle Element
+        -- Toggle
         function Tab:AddToggle(config)
             config = config or {}
             local toggleText = config.Name or "Toggle"
@@ -602,9 +685,9 @@ function Library:CreateWindow(config)
             ToggleButton.Text = ""
             ToggleButton.Parent = ToggleFrame
             
-            local ToggleCornerButton = Instance.new("UICorner")
-            ToggleCornerButton.CornerRadius = UDim.new(1, 0)
-            ToggleCornerButton.Parent = ToggleButton
+            local ToggleCornerBtn = Instance.new("UICorner")
+            ToggleCornerBtn.CornerRadius = UDim.new(1, 0)
+            ToggleCornerBtn.Parent = ToggleButton
             
             local ToggleCircle = Instance.new("Frame")
             ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
@@ -645,19 +728,16 @@ function Library:CreateWindow(config)
                 Tween(ToggleFrame, {BackgroundTransparency = 0.7}, 0.15)
             end)
             
-            local element = {
+            return {
                 SetValue = function(self, value)
                     toggled = value
                     UpdateToggle()
                     callback(toggled)
-                end,
-                Update = function() end
+                end
             }
-            table.insert(Tab.Elements, element)
-            return element
         end
         
-        -- Slider Element
+        -- Slider
         function Tab:AddSlider(config)
             config = config or {}
             local sliderText = config.Name or "Slider"
@@ -708,23 +788,23 @@ function Library:CreateWindow(config)
             
             table.insert(Window.AccentElements, {instance = SliderValue, type = "text"})
             
-            local SliderBackground = Instance.new("Frame")
-            SliderBackground.Size = UDim2.new(1, -30, 0, 6)
-            SliderBackground.Position = UDim2.new(0, 15, 0.5, 5)
-            SliderBackground.BackgroundColor3 = Theme.Secondary
-            SliderBackground.BackgroundTransparency = 0.5
-            SliderBackground.BorderSizePixel = 0
-            SliderBackground.Parent = SliderFrame
+            local SliderBg = Instance.new("Frame")
+            SliderBg.Size = UDim2.new(1, -30, 0, 6)
+            SliderBg.Position = UDim2.new(0, 15, 0.5, 5)
+            SliderBg.BackgroundColor3 = Theme.Secondary
+            SliderBg.BackgroundTransparency = 0.5
+            SliderBg.BorderSizePixel = 0
+            SliderBg.Parent = SliderFrame
             
             local SliderBgCorner = Instance.new("UICorner")
             SliderBgCorner.CornerRadius = UDim.new(1, 0)
-            SliderBgCorner.Parent = SliderBackground
+            SliderBgCorner.Parent = SliderBg
             
             local SliderFill = Instance.new("Frame")
             SliderFill.Size = UDim2.new(0, 0, 1, 0)
             SliderFill.BackgroundColor3 = Theme.Accent
             SliderFill.BorderSizePixel = 0
-            SliderFill.Parent = SliderBackground
+            SliderFill.Parent = SliderBg
             
             table.insert(Window.AccentElements, {instance = SliderFill, type = "background"})
             
@@ -732,26 +812,25 @@ function Library:CreateWindow(config)
             SliderFillCorner.CornerRadius = UDim.new(1, 0)
             SliderFillCorner.Parent = SliderFill
             
-            local SliderButton = Instance.new("TextButton")
-            SliderButton.Size = UDim2.new(1, 0, 1, 0)
-            SliderButton.BackgroundTransparency = 1
-            SliderButton.Text = ""
-            SliderButton.Parent = SliderBackground
+            local SliderBtn = Instance.new("TextButton")
+            SliderBtn.Size = UDim2.new(1, 0, 1, 0)
+            SliderBtn.BackgroundTransparency = 1
+            SliderBtn.Text = ""
+            SliderBtn.Parent = SliderBg
             
             local dragging = false
             local value = default
             
             local function UpdateSlider(input)
-                local pos = math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1)
+                local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
                 value = math.floor((min + (max - min) * pos) / increment + 0.5) * increment
                 value = math.clamp(value, min, max)
-                
                 SliderValue.Text = tostring(value)
                 Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.05)
                 callback(value)
             end
             
-            SliderButton.MouseButton1Down:Connect(function()
+            SliderBtn.MouseButton1Down:Connect(function()
                 dragging = true
             end)
             
@@ -767,11 +846,6 @@ function Library:CreateWindow(config)
                 end
             end)
             
-            SliderButton.MouseButton1Click:Connect(function()
-                local mouse = UserInputService:GetMouseLocation()
-                UpdateSlider({Position = Vector2.new(mouse.X, mouse.Y)})
-            end)
-            
             local initialPos = (default - min) / (max - min)
             SliderFill.Size = UDim2.new(initialPos, 0, 1, 0)
             
@@ -783,21 +857,18 @@ function Library:CreateWindow(config)
                 Tween(SliderFrame, {BackgroundTransparency = 0.7}, 0.15)
             end)
             
-            local element = {
+            return {
                 SetValue = function(self, val)
                     value = math.clamp(val, min, max)
                     local pos = (value - min) / (max - min)
                     SliderValue.Text = tostring(value)
                     Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)})
                     callback(value)
-                end,
-                Update = function() end
+                end
             }
-            table.insert(Tab.Elements, element)
-            return element
         end
         
-        -- Dropdown Element
+        -- Dropdown
         function Tab:AddDropdown(config)
             config = config or {}
             local dropdownText = config.Name or "Dropdown"
@@ -836,12 +907,12 @@ function Library:CreateWindow(config)
             DropdownLabel.ZIndex = 3
             DropdownLabel.Parent = DropdownFrame
             
-            local DropdownButton = Instance.new("TextButton")
-            DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-            DropdownButton.BackgroundTransparency = 1
-            DropdownButton.Text = ""
-            DropdownButton.ZIndex = 3
-            DropdownButton.Parent = DropdownFrame
+            local DropdownBtn = Instance.new("TextButton")
+            DropdownBtn.Size = UDim2.new(1, 0, 1, 0)
+            DropdownBtn.BackgroundTransparency = 1
+            DropdownBtn.Text = ""
+            DropdownBtn.ZIndex = 3
+            DropdownBtn.Parent = DropdownFrame
             
             local DropdownValue = Instance.new("TextLabel")
             DropdownValue.Size = UDim2.new(0.5, -40, 1, 0)
@@ -905,35 +976,35 @@ function Library:CreateWindow(config)
             local currentValue = default
             
             local function CreateOption(optionText)
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Size = UDim2.new(1, 0, 0, 32)
-                OptionButton.BackgroundColor3 = Theme.Tertiary
-                OptionButton.BackgroundTransparency = currentValue == optionText and 0.2 or 0.6
-                OptionButton.Text = optionText
-                OptionButton.TextColor3 = currentValue == optionText and Theme.Accent or Theme.Text
-                OptionButton.TextSize = 12
-                OptionButton.Font = Enum.Font.Gotham
-                OptionButton.BorderSizePixel = 0
-                OptionButton.ZIndex = 11
-                OptionButton.Parent = OptionsFrame
+                local OptionBtn = Instance.new("TextButton")
+                OptionBtn.Size = UDim2.new(1, 0, 0, 32)
+                OptionBtn.BackgroundColor3 = Theme.Tertiary
+                OptionBtn.BackgroundTransparency = currentValue == optionText and 0.2 or 0.6
+                OptionBtn.Text = optionText
+                OptionBtn.TextColor3 = currentValue == optionText and Theme.Accent or Theme.Text
+                OptionBtn.TextSize = 12
+                OptionBtn.Font = Enum.Font.Gotham
+                OptionBtn.BorderSizePixel = 0
+                OptionBtn.ZIndex = 11
+                OptionBtn.Parent = OptionsFrame
                 
                 local OptionCorner = Instance.new("UICorner")
                 OptionCorner.CornerRadius = UDim.new(0, 6)
-                OptionCorner.Parent = OptionButton
+                OptionCorner.Parent = OptionBtn
                 
-                OptionButton.MouseEnter:Connect(function()
+                OptionBtn.MouseEnter:Connect(function()
                     if currentValue ~= optionText then
-                        Tween(OptionButton, {BackgroundTransparency = 0.4}, 0.15)
+                        Tween(OptionBtn, {BackgroundTransparency = 0.4}, 0.15)
                     end
                 end)
                 
-                OptionButton.MouseLeave:Connect(function()
+                OptionBtn.MouseLeave:Connect(function()
                     if currentValue ~= optionText then
-                        Tween(OptionButton, {BackgroundTransparency = 0.6}, 0.15)
+                        Tween(OptionBtn, {BackgroundTransparency = 0.6}, 0.15)
                     end
                 end)
                 
-                OptionButton.MouseButton1Click:Connect(function()
+                OptionBtn.MouseButton1Click:Connect(function()
                     currentValue = optionText
                     DropdownValue.Text = optionText
                     
@@ -943,7 +1014,7 @@ function Library:CreateWindow(config)
                         end
                     end
                     
-                    Tween(OptionButton, {BackgroundTransparency = 0.2, TextColor3 = Theme.Accent}, 0.15)
+                    Tween(OptionBtn, {BackgroundTransparency = 0.2, TextColor3 = Theme.Accent}, 0.15)
                     
                     isOpen = false
                     Tween(OptionsFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.2)
@@ -959,7 +1030,7 @@ function Library:CreateWindow(config)
                 CreateOption(option)
             end
             
-            DropdownButton.MouseButton1Click:Connect(function()
+            DropdownBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 
                 if isOpen then
@@ -983,7 +1054,7 @@ function Library:CreateWindow(config)
                 Tween(DropdownFrame, {BackgroundTransparency = 0.7}, 0.15)
             end)
             
-            local element = {
+            return {
                 SetValue = function(self, val)
                     currentValue = val
                     DropdownValue.Text = val
@@ -999,11 +1070,8 @@ function Library:CreateWindow(config)
                     for _, option in ipairs(options) do
                         CreateOption(option)
                     end
-                end,
-                Update = function() end
+                end
             }
-            table.insert(Tab.Elements, element)
-            return element
         end
         
         -- Color Picker
@@ -1109,11 +1177,11 @@ function Library:CreateWindow(config)
             HueHandleStroke.Thickness = 2
             HueHandleStroke.Parent = HueHandle
             
-            local HueButton = Instance.new("TextButton")
-            HueButton.Size = UDim2.new(1, 0, 1, 0)
-            HueButton.BackgroundTransparency = 1
-            HueButton.Text = ""
-            HueButton.Parent = HueSliderBg
+            local HueBtn = Instance.new("TextButton")
+            HueBtn.Size = UDim2.new(1, 0, 1, 0)
+            HueBtn.BackgroundTransparency = 1
+            HueBtn.Text = ""
+            HueBtn.Parent = HueSliderBg
             
             local SatLabel = Instance.new("TextLabel")
             SatLabel.Size = UDim2.new(0, 60, 0, 12)
@@ -1158,11 +1226,11 @@ function Library:CreateWindow(config)
             SatHandleStroke.Thickness = 2
             SatHandleStroke.Parent = SatHandle
             
-            local SatButton = Instance.new("TextButton")
-            SatButton.Size = UDim2.new(1, 0, 1, 0)
-            SatButton.BackgroundTransparency = 1
-            SatButton.Text = ""
-            SatButton.Parent = SatSliderBg
+            local SatBtn = Instance.new("TextButton")
+            SatBtn.Size = UDim2.new(1, 0, 1, 0)
+            SatBtn.BackgroundTransparency = 1
+            SatBtn.Text = ""
+            SatBtn.Parent = SatSliderBg
             
             local currentHue = 0.6
             local currentSat = 1
@@ -1198,11 +1266,11 @@ function Library:CreateWindow(config)
                 end
             end
             
-            HueButton.MouseButton1Down:Connect(function()
+            HueBtn.MouseButton1Down:Connect(function()
                 hueDragging = true
             end)
             
-            SatButton.MouseButton1Down:Connect(function()
+            SatBtn.MouseButton1Down:Connect(function()
                 satDragging = true
             end)
             
@@ -1241,18 +1309,15 @@ function Library:CreateWindow(config)
                 Tween(ColorFrame, {BackgroundTransparency = 0.7}, 0.15)
             end)
             
-            local element = {
+            return {
                 SetValue = function(self, col)
                     PreviewColor.BackgroundColor3 = col
                     callback(col)
-                end,
-                Update = function() end
+                end
             }
-            table.insert(Tab.Elements, element)
-            return element
         end
         
-        -- Textbox Element
+        -- Textbox
         function Tab:AddTextbox(config)
             config = config or {}
             local textboxText = config.Name or "Textbox"
@@ -1326,20 +1391,109 @@ function Library:CreateWindow(config)
                 Tween(TextboxFrame, {BackgroundTransparency = 0.7}, 0.15)
             end)
             
-            local element = {
+            return {
                 SetValue = function(self, val)
                     Textbox.Text = val
                 end,
                 GetValue = function()
                     return Textbox.Text
-                end,
-                Update = function() end
+                end
             }
-            table.insert(Tab.Elements, element)
-            return element
         end
         
-        -- Label Element
+        -- Keybind
+        function Tab:AddKeybind(config)
+            config = config or {}
+            local keybindText = config.Name or "Keybind"
+            local default = config.Default or Enum.KeyCode.E
+            local callback = config.Callback or function() end
+            
+            local KeybindFrame = Instance.new("Frame")
+            KeybindFrame.Size = UDim2.new(1, 0, 0, 38)
+            KeybindFrame.BackgroundColor3 = Theme.Tertiary
+            KeybindFrame.BackgroundTransparency = 0.7
+            KeybindFrame.BorderSizePixel = 0
+            KeybindFrame.Parent = TabContent
+            
+            local KeybindStroke = Instance.new("UIStroke")
+            KeybindStroke.Color = Theme.Border
+            KeybindStroke.Thickness = 1
+            KeybindStroke.Transparency = 0.5
+            KeybindStroke.Parent = KeybindFrame
+            
+            local KeybindCorner = Instance.new("UICorner")
+            KeybindCorner.CornerRadius = UDim.new(0, 8)
+            KeybindCorner.Parent = KeybindFrame
+            
+            local KeybindLabel = Instance.new("TextLabel")
+            KeybindLabel.Size = UDim2.new(1, -80, 1, 0)
+            KeybindLabel.Position = UDim2.new(0, 15, 0, 0)
+            KeybindLabel.BackgroundTransparency = 1
+            KeybindLabel.Text = keybindText
+            KeybindLabel.TextColor3 = Theme.Text
+            KeybindLabel.TextSize = 13
+            KeybindLabel.Font = Enum.Font.Gotham
+            KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+            KeybindLabel.Parent = KeybindFrame
+            
+            local KeybindButton = Instance.new("TextButton")
+            KeybindButton.Size = UDim2.new(0, 60, 0, 26)
+            KeybindButton.Position = UDim2.new(1, -70, 0.5, -13)
+            KeybindButton.BackgroundColor3 = Theme.Secondary
+            KeybindButton.BackgroundTransparency = 0.5
+            KeybindButton.BorderSizePixel = 0
+            KeybindButton.Text = default.Name
+            KeybindButton.TextColor3 = Theme.Accent
+            KeybindButton.TextSize = 11
+            KeybindButton.Font = Enum.Font.GothamBold
+            KeybindButton.Parent = KeybindFrame
+            
+            table.insert(Window.AccentElements, {instance = KeybindButton, type = "text"})
+            
+            local KeybindBtnCorner = Instance.new("UICorner")
+            KeybindBtnCorner.CornerRadius = UDim.new(0, 6)
+            KeybindBtnCorner.Parent = KeybindButton
+            
+            local currentKey = default
+            local listening = false
+            
+            KeybindButton.MouseButton1Click:Connect(function()
+                listening = true
+                KeybindButton.Text = "..."
+            end)
+            
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if listening then
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        currentKey = input.KeyCode
+                        KeybindButton.Text = input.KeyCode.Name
+                        listening = false
+                    end
+                elseif not gameProcessed and input.KeyCode == currentKey then
+                    callback(currentKey)
+                end
+            end)
+            
+            KeybindFrame.MouseEnter:Connect(function()
+                Tween(KeybindFrame, {BackgroundTransparency = 0.5}, 0.15)
+            end)
+            
+            KeybindFrame.MouseLeave:Connect(function()
+                Tween(KeybindFrame, {BackgroundTransparency = 0.7}, 0.15)
+            end)
+            
+            return {
+                SetValue = function(self, key)
+                    currentKey = key
+                    KeybindButton.Text = key.Name
+                end,
+                GetValue = function()
+                    return currentKey
+                end
+            }
+        end
+        
+        -- Label
         function Tab:AddLabel(text)
             local LabelFrame = Instance.new("Frame")
             LabelFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -1366,7 +1520,7 @@ function Library:CreateWindow(config)
             }
         end
         
-        -- Section Element
+        -- Section
         function Tab:AddSection(sectionName)
             local SectionFrame = Instance.new("Frame")
             SectionFrame.Size = UDim2.new(1, 0, 0, 35)
