@@ -329,22 +329,48 @@ function Library:CreateWindow(config)
     local player = Players.LocalPlayer
     
     local UserInfoFrame = Instance.new("Frame")
-    UserInfoFrame.Name = "UserInfo"
-    UserInfoFrame.Size = UDim2.new(1, 0, 0, 55)
-    UserInfoFrame.Position = UDim2.new(0, 0, 1, -55)
-    UserInfoFrame.BackgroundColor3 = Theme.Tertiary
-    UserInfoFrame.BackgroundTransparency = 0.5
-    UserInfoFrame.BorderSizePixel = 0
-    UserInfoFrame.ZIndex = 5
-    UserInfoFrame.Parent = TabContainer
-    
-    local UserInfoTopBorder = Instance.new("Frame")
-    UserInfoTopBorder.Size = UDim2.new(1, 0, 0, 1)
-    UserInfoTopBorder.Position = UDim2.new(0, 0, 0, 0)
-    UserInfoTopBorder.BackgroundColor3 = Theme.Border
-    UserInfoTopBorder.BackgroundTransparency = 0.5
-    UserInfoTopBorder.BorderSizePixel = 0
-    UserInfoTopBorder.Parent = UserInfoFrame
+UserInfoFrame.Name = "UserInfo"
+UserInfoFrame.Size = UDim2.new(1, 0, 0, 55)
+UserInfoFrame.Position = UDim2.new(0, 0, 1, -55)
+UserInfoFrame.BackgroundColor3 = Theme.Tertiary
+UserInfoFrame.BackgroundTransparency = 0.5
+UserInfoFrame.BorderSizePixel = 0
+UserInfoFrame.ZIndex = 5
+UserInfoFrame.Parent = TabContainer
+
+-- Only round the bottom-left corner to match window
+local UserInfoCorner = Instance.new("UICorner")
+UserInfoCorner.CornerRadius = UDim.new(0, 12)
+UserInfoCorner.Parent = UserInfoFrame
+
+-- Cover top corners to make them square
+local TopCover = Instance.new("Frame")
+TopCover.Size = UDim2.new(1, 0, 0, 15)
+TopCover.Position = UDim2.new(0, 0, 0, 0)
+TopCover.BackgroundColor3 = Theme.Tertiary
+TopCover.BackgroundTransparency = 0.5
+TopCover.BorderSizePixel = 0
+TopCover.ZIndex = 5
+TopCover.Parent = UserInfoFrame
+
+-- Cover bottom-right corner to make it square
+local RightCover = Instance.new("Frame")
+RightCover.Size = UDim2.new(0, 15, 0, 15)
+RightCover.Position = UDim2.new(1, -15, 1, -15)
+RightCover.BackgroundColor3 = Theme.Tertiary
+RightCover.BackgroundTransparency = 0.5
+RightCover.BorderSizePixel = 0
+RightCover.ZIndex = 5
+RightCover.Parent = UserInfoFrame
+
+local UserInfoTopBorder = Instance.new("Frame")
+UserInfoTopBorder.Size = UDim2.new(1, 0, 0, 1)
+UserInfoTopBorder.Position = UDim2.new(0, 0, 0, 0)
+UserInfoTopBorder.BackgroundColor3 = Theme.Border
+UserInfoTopBorder.BackgroundTransparency = 0.5
+UserInfoTopBorder.BorderSizePixel = 0
+UserInfoTopBorder.ZIndex = 6
+UserInfoTopBorder.Parent = UserInfoFrame
     
     local AvatarContainer = Instance.new("Frame")
     AvatarContainer.Size = UDim2.new(0, 36, 0, 36)
