@@ -315,37 +315,15 @@ function Library:CreateWindow(config)
     end)
     
     -- Tab Container
-local TabContainer = Instance.new("Frame")
-TabContainer.Name = "TabContainer"
-TabContainer.Size = UDim2.new(0, 130, 1, -50)
-TabContainer.Position = UDim2.new(0, 0, 0, 50)
-TabContainer.BackgroundColor3 = Theme.Secondary
-TabContainer.BackgroundTransparency = 0.7
-TabContainer.BorderSizePixel = 0
-TabContainer.ClipsDescendants = true
-TabContainer.Parent = MainFrame
-
--- Add corner only to bottom-left
-local TabContainerCorner = Instance.new("UICorner")
-TabContainerCorner.CornerRadius = UDim.new(0, 12)
-TabContainerCorner.Parent = TabContainer
-
--- Cover top corners and bottom-right corner to keep them square
-local TabTopCover = Instance.new("Frame")
-TabTopCover.Size = UDim2.new(1, 0, 0, 15)
-TabTopCover.Position = UDim2.new(0, 0, 0, 0)
-TabTopCover.BackgroundColor3 = Theme.Secondary
-TabTopCover.BackgroundTransparency = 0.7
-TabTopCover.BorderSizePixel = 0
-TabTopCover.Parent = TabContainer
-
-local TabRightCover = Instance.new("Frame")
-TabRightCover.Size = UDim2.new(0, 15, 1, 0)
-TabRightCover.Position = UDim2.new(1, -15, 0, 0)
-TabRightCover.BackgroundColor3 = Theme.Secondary
-TabRightCover.BackgroundTransparency = 0.7
-TabRightCover.BorderSizePixel = 0
-TabRightCover.Parent = TabContainer
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(0, 130, 1, -50)
+    TabContainer.Position = UDim2.new(0, 0, 0, 50)
+    TabContainer.BackgroundColor3 = Theme.Secondary
+    TabContainer.BackgroundTransparency = 0.7
+    TabContainer.BorderSizePixel = 0
+    TabContainer.ClipsDescendants = true
+    TabContainer.Parent = MainFrame
     
     -- User Info Panel (bottom of tab container)
     local player = Players.LocalPlayer
